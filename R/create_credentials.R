@@ -22,8 +22,8 @@ creds <- svc$get_secret_value(Sys.getenv('ODK_CREDENTIALS_SECRETS_NAME')) %>%
 # write to yaml file as . systems file
 out <- list(
   url= 'https://databrew.org',
-  un= 'atediarjo@gmail.com',
-  pw= 'jakartabicycle'
+  un= creds$username,
+  pw= creds$password
 )
 
 # write to yaml
