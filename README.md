@@ -1,11 +1,12 @@
 # ODK Forms Extraction
 @author: Aryton Tediarjo (atediarjo@gmail.com)
+
 @reviewedBy: Joe Brew
 
 ## About
 This Github repository is used as a microservice for extracting forms (from selected projects) to be stored to S3. This microservice assumes databrew.org as the default server. 
 
-## Contributing
+## Contributing Guidelines
 
 ### Clone Repository
 ```zsh
@@ -85,6 +86,6 @@ To push to Dockerhub, you will only need to push your code to Github remote main
 git push
 ```
 
-You can find your Docker Image in Dockerhub under the name **databrew/odk-form-extraction**
+You can find your Docker Image in Dockerhub under the name **databrewllc/odk-form-extraction**
 
 
