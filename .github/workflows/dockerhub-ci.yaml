@@ -22,4 +22,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: aryton/${{ github.event.repository.name }}:latest
+          tags: databrewllc/${{ github.event.repository.name }}:latest

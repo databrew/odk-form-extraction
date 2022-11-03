@@ -17,5 +17,5 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        repository: aryton/extract-bohemia-kenya-project
+        repository: databrewllc/odk-form-extraction
         short-description: ${{ github.event.repository.description }}
