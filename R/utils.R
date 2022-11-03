@@ -26,7 +26,7 @@ create_s3_bucket <- function(s3obj = NULL, bucket_name){
 #' @param fid survey form id
 #' @param file_path filepath
 #' @param bucket_name name of the bucket
-#' @param prefix prefix of the bucket (bucket URI)
+#' @param object_key S3 object key (S3 URI)
 save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, object_key){
   # instantiate s3 object
   tryCatch({
@@ -34,7 +34,7 @@ save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, 
     basepath <- basename(file_path)
     # Upload to bucket
     s3obj$put_object(Bucket = bucket_name, Body = file_path, Key = object_key)
-    message(glue::glue("log_message: {project_name} : {fid} is uploaded with Bucket URI:{prefix}{basepath}"))
+    message(glue::glue("log_message: {project_name} : {fid} is uploaded with Bucket URI:{object_key}"))
   }, error = function(e){
     message(glue::glue('log_message: {project_name} : {fid} Fail to upload to S3'))
   })
