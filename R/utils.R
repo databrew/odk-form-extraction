@@ -27,12 +27,13 @@ create_s3_bucket <- function(s3obj = NULL, bucket_name){
 #' @param file_path filepath
 #' @param bucket_name name of the bucket
 #' @param prefix prefix of the bucket (bucket URI)
-save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, prefix){
+save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, object_key){
   # instantiate s3 object
   tryCatch({
-    # Upload to bucket
-    s3obj$put_object(Bucket = bucket_name, Body = file_path, Key = prefix)
+    # get basepath
     basepath <- basename(file_path)
+    # Upload to bucket
+    s3obj$put_object(Bucket = bucket_name, Body = file_path, Key = object_key)
     message(glue::glue("log_message: {project_name} : {fid} is uploaded with Bucket URI:{prefix}{basepath}"))
   }, error = function(e){
     message(glue::glue('log_message: {project_name} : {fid} Fail to upload to S3'))
@@ -75,8 +76,8 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
         zip_path = ruODK::submission_export(pid = project_id, fid = fid, local_dir = t),
         file_path = unzip(zip_path, exdir = t),
         bucket_name = bucket_name,
-        prefix = prefix) %>%
-      dplyr::select(project_name, fid, file_path, bucket_name, prefix)
+        object_key = glue::glue("{prefix}{fid}/{fid}.csv")) %>%
+      dplyr::select(project_name, fid, file_path, bucket_name, object_key)
     return(manifest)
   })
 }

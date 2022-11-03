@@ -48,5 +48,5 @@ save_to_s3 <- s3_manifest %>%
   fid = ..2,
   file_path=..3,
   bucket_name=..4,
-  prefix=..5))
+  object_key=..5))
 

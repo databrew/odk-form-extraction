@@ -3,9 +3,9 @@ default:
   projects:
     - name: 'kwale'
       bucket_name: 'databrew-kwale-bucket'
-      folder_name: 'raw-form/kwale'
+      folder_name: 'raw-form'
     - name: 'Bohemia Testing - KE'
       bucket_name: 'databrew-bohemia-testing-kenya-bucket'
-      folder_name: 'raw-form/bohemia-testing-kenya'
+      folder_name: 'raw-form'
 
 
