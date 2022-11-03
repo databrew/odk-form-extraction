@@ -6,10 +6,10 @@ RUN apt-get update -y\
     && apt-get install -y git
 
 # clone github repository
-RUN git clone https://github.com/arytontediarjo/extract-bohemia-kenya-project.git /root/extract-bohemia-kenya-project
+RUN git clone https://github.com/databrew/odk-form-extraction.git /root/odk-form-extraction
 
 # use the bohemia kenya work directory
-WORKDIR /root/extract-bohemia-kenya-project
+WORKDIR /root/odk-form-extraction
 
 # use renv to replicate
 ENV RENV_VERSION 0.16.0
