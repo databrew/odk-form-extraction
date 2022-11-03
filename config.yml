@@ -1,0 +1,11 @@
+default:
+  server: 'https://databrew.org'
+  projects:
+    - name: 'kwale'
+      bucket_name: 'databrew-kwale-bucket'
+      folder_name: 'raw-form/kwale'
+    - name: 'Bohemia Testing - KE'
+      bucket_name: 'databrew-bohemia-testing-kenya-bucket'
+      folder_name: 'raw-form/bohemia-testing-kenya'
+
+
