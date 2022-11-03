@@ -29,7 +29,3 @@ out <- list(
 # write to yaml
 yaml::write_yaml(out, "~/.bohemia_credentials")
 message("Log Message: credentials created")
-
-
-
-
