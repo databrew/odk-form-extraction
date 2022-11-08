@@ -1,11 +1,9 @@
+#' This is the config file used for extracting faw forms
+#' it is defaulted to databrew.org and to add new projects you will need to
+#' append the project name into the
 default:
-  server: 'https://databrew.org'
+  servers:
+    - 'https://databrew.org'
   projects:
-    - name: 'kwale'
-      bucket_name: 'databrew-kwale-bucket'
-      folder_name: 'raw-form'
-    - name: 'Bohemia Testing - KE'
-      bucket_name: 'databrew-bohemia-testing-kenya-bucket'
-      folder_name: 'raw-form'
-
-
+    - 'kwale'
+    - 'Bohemia Testing - KE'

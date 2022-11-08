@@ -3,20 +3,24 @@
 #' @param s3obj instantiation of s3 object
 #' @param bucket_name name of the bucket
 create_s3_bucket <- function(s3obj = NULL, bucket_name){
-  message(glue::glue("log_message: checking {bucket_name}"))
-  bucket_list <- s3obj$list_buckets() %>%
-    .$Buckets %>%
-    purrr::map_dfr(function(b){b})
-  if(!bucket_name %in% bucket_list$Name){
-    s3obj$create_bucket(Bucket = bucket_name)
-    message(glue::glue("log_message: {bucket_name} created"))
-    s3obj$put_bucket_versioning(
-      Bucket = bucket_name,
-      VersioningConfiguration = list(Status = 'Enabled'))
-    message(glue::glue("log_message: {bucket_name} versioning enabled"))
-  }else{
-    message(glue::glue("log_message: {bucket_name} is available"))
-  }
+  tryCatch({
+    message(glue::glue("log_message: checking {bucket_name}"))
+    bucket_list <- s3obj$list_buckets() %>%
+      .$Buckets %>%
+      purrr::map_dfr(function(b){b})
+    if(!bucket_name %in% bucket_list$Name){
+      s3obj$create_bucket(Bucket = bucket_name)
+      message(glue::glue("log_message: {bucket_name} created"))
+      s3obj$put_bucket_versioning(
+        Bucket = bucket_name,
+        VersioningConfiguration = list(Status = 'Enabled'))
+      message(glue::glue("log_message: {bucket_name} versioning enabled"))
+    }else{
+      message(glue::glue("log_message: {bucket_name} is available"))
+    }
+  }, error = function(e){
+    message(glue::glue("error_message: ", e$message))
+  })
 }
 
 #' @description: Function to save files to s3 bucket
@@ -36,7 +40,7 @@ save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, 
     s3obj$put_object(Bucket = bucket_name, Body = file_path, Key = object_key)
     message(glue::glue("log_message: {project_name} : {fid} is uploaded with Bucket URI:{object_key}"))
   }, error = function(e){
-    message(glue::glue('log_message: {project_name} : {fid} Fail to upload to S3'))
+    message(glue::glue("error_message: ", e$message))
   })
 }
 
@@ -48,21 +52,19 @@ save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, 
 create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
   purrr::map_dfr(projects, function(project){
     # name bucket
-    bucket_name <- glue::glue(Sys.getenv('BUCKET_PREFIX'), project$bucket_name)
+    bucket_name <- glue::glue(Sys.getenv('BUCKET_PREFIX'),
+                              gsub('https://', '', server, fixed = TRUE))
+
+    # change project_name
+    project_name <- tolower(gsub(' ', '', project, fixed = TRUE))
 
     # Establish a prefix (folder on AWS for saving everything)
-    prefix <- paste0(gsub(
-      'https://', '',
-      server,
-      fixed = TRUE), '/',
-      project$folder_name, '/')
-
-    # prepare s3 buckets
-    create_s3_bucket(s3obj = s3obj, bucket_name)
+    prefix <- glue::glue("{project_name}/raw-form/")
 
     # get all project_id
     project_id <- ruODK::project_list() %>%
-      dplyr::filter(name == project$name) %>%
+      dplyr::filter(!archived) %>%
+      dplyr::filter(name == project) %>%
       .$id
 
     # create tempdir
@@ -72,12 +74,18 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
     manifest <- ruODK::form_list(pid = project_id) %>%
       dplyr::rowwise() %>%
       dplyr::mutate(
-        project_name = project$name,
+        server_name = server,
+        project_name = project_name,
         zip_path = ruODK::submission_export(pid = project_id, fid = fid, local_dir = t),
         file_path = unzip(zip_path, exdir = t),
         bucket_name = bucket_name,
         object_key = glue::glue("{prefix}{fid}/{fid}.csv")) %>%
-      dplyr::select(project_name, fid, file_path, bucket_name, object_key)
+      dplyr::select(server_name,
+                    project_name,
+                    fid,
+                    file_path,
+                    bucket_name,
+                    object_key)
     return(manifest)
   })
 }

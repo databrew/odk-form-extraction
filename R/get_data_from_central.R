@@ -40,13 +40,20 @@ s3_manifest <- create_s3_upload_manifest(
   server = conf$server,
   projects = conf$projects)
 
+# create s3 buckets
+create_bucket <- s3_manifest$bucket_name %>%
+  head(1) %>%
+  create_s3_bucket(
+  s3obj = s3obj,
+  bucket_name = .)
+
 # iteratively go through manifest and save to s3
-save_to_s3 <- s3_manifest %>%
+save_objects_to_s3 <- s3_manifest %>%
   purrr::pmap(~save_to_s3_bucket(
   s3obj = s3obj,
-  project_name = ..1,
-  fid = ..2,
-  file_path=..3,
-  bucket_name=..4,
-  object_key=..5))
+  project_name = ..2,
+  fid = ..3,
+  file_path=..4,
+  bucket_name=..5,
+  object_key=..6))
 
