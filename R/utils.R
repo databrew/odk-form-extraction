@@ -1,3 +1,11 @@
+#' @description clean column names
+#' @param data dataset to clean
+clean_column_names <- function(data){
+  names(data) <- unlist(lapply(strsplit(names(data), '-'), function(a){a[length(a)]}))
+  return(data)
+}
+
+
 #' @description: Function to create S3 bucket with versioning enabled
 #'
 #' @param s3obj instantiation of s3 object
@@ -86,6 +94,15 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
                     file_path,
                     bucket_name,
                     object_key)
+
+    # clean extraneous column names
+    manifest$file_path %>%
+      purrr::map(function(file_path){
+        data <- data.table::fread(file_path) %>%
+          clean_column_names() %>%
+          data.table::fwrite(file_path)
+      })
+
     return(manifest)
   })
 }
