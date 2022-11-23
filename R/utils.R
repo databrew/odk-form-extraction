@@ -59,6 +59,11 @@ save_to_s3_bucket <- function(s3obj, project_name, fid, file_path, bucket_name, 
 #' @param projects name of the projects
 create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
   purrr::map_dfr(projects, function(project){
+    # create dir
+    # create save location
+    t <- glue::glue('~/.odk_cache/{project}')
+    dir.create(t, showWarnings = FALSE, recursive = TRUE)
+
     # name bucket
     bucket_name <- glue::glue(Sys.getenv('BUCKET_PREFIX'),
                               gsub('https://', '', server, fixed = TRUE))
@@ -75,16 +80,16 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
       dplyr::filter(name == project) %>%
       .$id
 
-    # create tempdir
-    t <- tempdir()
-
     # generate file mapping as a manifest
     manifest <- ruODK::form_list(pid = project_id) %>%
       dplyr::rowwise() %>%
       dplyr::mutate(
         server_name = server,
         project_name = project_name,
-        zip_path = ruODK::submission_export(pid = project_id, fid = fid, local_dir = t),
+        zip_path = ruODK::submission_export(pid = project_id,
+                                            fid = fid,
+                                            local_dir = t,
+                                            overwrite = TRUE),
         file_path = unzip(zip_path, exdir = t),
         bucket_name = bucket_name,
         object_key = glue::glue("{prefix}{fid}/{fid}.csv")) %>%
@@ -95,14 +100,13 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
                     bucket_name,
                     object_key)
 
-    # clean extraneous column names
+    # # clean extraneous column names
     manifest$file_path %>%
       purrr::map(function(file_path){
         data <- data.table::fread(file_path) %>%
           clean_column_names() %>%
           data.table::fwrite(file_path)
       })
-
     return(manifest)
   })
 }
