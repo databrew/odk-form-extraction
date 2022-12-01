@@ -61,52 +61,56 @@ create_s3_upload_manifest <- function(s3obj = NULL, server, projects){
   purrr::map_dfr(projects, function(project){
     # create dir
     # create save location
-    t <- glue::glue('~/.odk_cache/{project}')
-    dir.create(t, showWarnings = FALSE, recursive = TRUE)
+    tryCatch({
+      t <- glue::glue('~/.odk_cache/{project}')
+      dir.create(t, showWarnings = FALSE, recursive = TRUE)
 
-    # name bucket
-    bucket_name <- glue::glue(Sys.getenv('BUCKET_PREFIX'),
-                              gsub('https://', '', server, fixed = TRUE))
+      # name bucket
+      bucket_name <- glue::glue(Sys.getenv('BUCKET_PREFIX'),
+                                gsub('https://', '', server, fixed = TRUE))
 
-    # change project_name
-    project_name <- tolower(gsub(' ', '', project, fixed = TRUE))
+      # change project_name
+      project_name <- tolower(gsub(' ', '', project, fixed = TRUE))
 
-    # Establish a prefix (folder on AWS for saving everything)
-    prefix <- glue::glue("{project_name}/raw-form/")
+      # Establish a prefix (folder on AWS for saving everything)
+      prefix <- glue::glue("{project_name}/raw-form/")
 
-    # get all project_id
-    project_id <- ruODK::project_list() %>%
-      dplyr::filter(!archived) %>%
-      dplyr::filter(name == project) %>%
-      .$id
+      # get all project_id
+      project_id <- ruODK::project_list() %>%
+        dplyr::filter(!archived) %>%
+        dplyr::filter(name == project) %>%
+        .$id
 
-    # generate file mapping as a manifest
-    manifest <- ruODK::form_list(pid = project_id) %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(
-        server_name = server,
-        project_name = project_name,
-        zip_path = ruODK::submission_export(pid = project_id,
-                                            fid = fid,
-                                            local_dir = t,
-                                            overwrite = TRUE),
-        file_path = unzip(zip_path, exdir = t),
-        bucket_name = bucket_name,
-        object_key = glue::glue("{prefix}{fid}/{fid}.csv")) %>%
-      dplyr::select(server_name,
-                    project_name,
-                    fid,
-                    file_path,
-                    bucket_name,
-                    object_key)
-
-    # # clean extraneous column names
-    manifest$file_path %>%
-      purrr::map(function(file_path){
-        data <- data.table::fread(file_path) %>%
-          clean_column_names() %>%
-          data.table::fwrite(file_path)
-      })
+      # generate file mapping as a manifest
+      manifest <- ruODK::form_list(pid = project_id) %>%
+        dplyr::rowwise() %>%
+        dplyr::mutate(
+          server_name = server,
+          project_name = project_name,
+          zip_path = ruODK::submission_export(pid = project_id,
+                                              fid = fid,
+                                              local_dir = t,
+                                              overwrite = TRUE),
+          file_path = unzip(zip_path, exdir = t),
+          bucket_name = bucket_name,
+          object_key = glue::glue("{prefix}{fid}/{fid}.csv")) %>%
+        dplyr::select(server_name,
+                      project_name,
+                      fid,
+                      file_path,
+                      bucket_name,
+                      object_key)
+      # # clean extraneous column names
+      manifest$file_path %>%
+        purrr::map(function(file_path){
+          data <- data.table::fread(file_path) %>%
+            clean_column_names() %>%
+            data.table::fwrite(file_path)
+        })
+    }, error = function(e){
+      message(glue::glue("error_message: Bug is coming from ", project, " project"))
+      message(glue::glue("error_message: ", e$message))
+    })
     return(manifest)
   })
 }
